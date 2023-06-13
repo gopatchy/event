@@ -1,10 +1,7 @@
 package event
 
 import (
-	"bytes"
-	"compress/gzip"
 	"context"
-	"encoding/json"
 	"fmt"
 	"log"
 	"strings"
@@ -36,7 +33,7 @@ func (c *Client) AddTarget(url string, headers map[string]string, writePeriodSec
 		lastEvent:          time.Now(),
 	}
 
-	go c.flushLoop(target)
+	go target.flushLoop(c)
 
 	c.mu.Lock()
 	defer c.mu.Unlock()
@@ -87,61 +84,5 @@ func (c *Client) writeEvent(ctx context.Context, ev *Event) {
 
 	for _, target := range c.targets {
 		target.writeEvent(ev)
-	}
-}
-
-func (c *Client) flushLoop(target *Target) {
-	t := time.NewTicker(time.Duration(target.writePeriodSeconds * float64(time.Second)))
-	defer t.Stop()
-
-	for {
-		select {
-		case <-target.stop:
-			c.flush(target)
-			return
-
-		case <-t.C:
-			c.flush(target)
-		}
-	}
-}
-
-func (c *Client) flush(target *Target) {
-	c.mu.Lock()
-	events := target.events
-	target.events = nil
-	c.mu.Unlock()
-
-	if len(events) == 0 {
-		return
-	}
-
-	buf := &bytes.Buffer{}
-	g := gzip.NewWriter(buf)
-	enc := json.NewEncoder(g)
-
-	err := enc.Encode(events)
-	if err != nil {
-		panic(err)
-	}
-
-	err = g.Close()
-	if err != nil {
-		panic(err)
-	}
-
-	resp, err := target.client.R().
-		SetHeader("Content-Type", "application/json").
-		SetHeader("Content-Encoding", "gzip").
-		SetBody(buf).
-		Post("")
-	if err != nil {
-		log.Printf("failed write to event target: %s", err)
-		return
-	}
-
-	if resp.IsError() {
-		log.Printf("failed write to event target: %d %s: %s", resp.StatusCode(), resp.Status(), resp.String())
-		return
 	}
 }

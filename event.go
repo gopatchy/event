@@ -10,7 +10,7 @@ type Event struct {
 	Data       map[string]any `json:"data"`
 }
 
-func newEvent(eventType string, vals ...any) *Event {
+func NewEvent(eventType string, vals ...any) *Event {
 	now := time.Now()
 
 	ev := &Event{

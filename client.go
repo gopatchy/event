@@ -11,6 +11,9 @@ import (
 	"github.com/go-resty/resty/v2"
 )
 
+// TODO: Switch to opentelemetry protocol
+// TODO: Add protocol-level tests
+
 type Client struct {
 	targets []*Target
 	hooks   []Hook
@@ -43,16 +46,18 @@ func (c *Client) AddTarget(url string, headers map[string]string, writePeriodSec
 	return target
 }
 
-func (c *Client) AddHook(hook Hook) {
+func (c *Client) AddHook(hook Hook) *Client {
 	c.mu.Lock()
 	defer c.mu.Unlock()
 
 	c.hooks = append(c.hooks, hook)
+
+	return c
 }
 
 func (c *Client) Log(ctx context.Context, vals ...any) {
-	ev := newEvent("log", vals...)
-	c.writeEvent(ctx, ev)
+	ev := NewEvent("log", vals...)
+	c.WriteEvent(ctx, ev)
 
 	parts := []string{}
 
@@ -72,7 +77,7 @@ func (c *Client) Close() {
 	}
 }
 
-func (c *Client) writeEvent(ctx context.Context, ev *Event) {
+func (c *Client) WriteEvent(ctx context.Context, ev *Event) {
 	ev.Set("durationMS", time.Since(ev.start).Milliseconds())
 
 	c.mu.Lock()

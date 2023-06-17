@@ -36,6 +36,10 @@ func (c *Client) HandleFlags() error {
 	headers := map[string]string{}
 
 	for _, pair := range strings.Split(*eventHeaders, "|") {
+		if pair == "" {
+			continue
+		}
+
 		parts := strings.SplitN(pair, "=", 2)
 		if len(parts) != 2 {
 			return ErrInvalidHeader
@@ -51,6 +55,10 @@ func (c *Client) HandleFlags() error {
 	)
 
 	for _, rc := range strings.Split(*eventRateClasses, "|") {
+		if rc == "" {
+			continue
+		}
+
 		parts := strings.SplitN(rc, "=", 3)
 		if len(parts) != 3 {
 			return ErrInvalidRateClass

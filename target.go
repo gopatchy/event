@@ -18,6 +18,7 @@ type Target struct {
 	windowSeconds      float64
 	rateClasses        []*rateClass
 	stop               chan bool
+	done               chan bool
 	lastEvent          time.Time
 	events             []*Event
 }
@@ -37,6 +38,11 @@ func (target *Target) AddRateClass(grantRate float64, vals ...any) {
 	}
 
 	target.rateClasses = append(target.rateClasses, erc)
+}
+
+func (target *Target) close() {
+	close(target.stop)
+	<-target.done
 }
 
 func (target *Target) writeEvent(ev *Event) {
@@ -74,6 +80,8 @@ func (target *Target) writeEvent(ev *Event) {
 }
 
 func (target *Target) flushLoop(c *Client) {
+	defer close(target.done)
+
 	t := time.NewTicker(time.Duration(target.writePeriodSeconds * float64(time.Second)))
 	defer t.Stop()
 

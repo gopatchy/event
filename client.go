@@ -83,7 +83,7 @@ func (c *Client) Close() {
 	defer c.mu.Unlock()
 
 	for _, target := range c.targets {
-		close(target.stop)
+		target.close()
 	}
 }
 

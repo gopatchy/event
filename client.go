@@ -55,7 +55,7 @@ func (c *Client) AddHook(hook Hook) *Client {
 	return c
 }
 
-func (c *Client) Log(ctx context.Context, vals ...any) {
+func (c *Client) Log(ctx context.Context, vals ...any) string {
 	ev := NewEvent("log", vals...)
 	c.WriteEvent(ctx, ev)
 
@@ -65,7 +65,17 @@ func (c *Client) Log(ctx context.Context, vals ...any) {
 		parts = append(parts, fmt.Sprintf("%s=%s", vals[i], vals[i+1]))
 	}
 
-	log.Print(strings.Join(parts, " "))
+	msg := strings.Join(parts, " ")
+
+	log.Print(msg)
+
+	return msg
+}
+
+func (c *Client) Fatal(ctx context.Context, vals ...any) {
+	msg := c.Log(ctx, vals...)
+	c.Close()
+	panic(msg)
 }
 
 func (c *Client) Close() {

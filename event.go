@@ -1,6 +1,9 @@
 package event
 
-import "time"
+import (
+	"fmt"
+	"time"
+)
 
 type Event struct {
 	start time.Time
@@ -28,7 +31,7 @@ func NewEvent(eventType string, vals ...any) *Event {
 
 func (ev *Event) Set(vals ...any) {
 	if len(vals)%2 != 0 {
-		panic(vals)
+		panic(fmt.Sprintf("missing value for key in: %#v", vals))
 	}
 
 	for i := 0; i < len(vals); i += 2 {

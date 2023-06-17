@@ -62,7 +62,7 @@ func (c *Client) Log(ctx context.Context, vals ...any) string {
 	parts := []string{}
 
 	for i := 0; i < len(vals); i += 2 {
-		parts = append(parts, fmt.Sprintf("%s=%s", vals[i], vals[i+1]))
+		parts = append(parts, fmt.Sprintf("%s=%v", vals[i], vals[i+1]))
 	}
 
 	msg := strings.Join(parts, " ")
